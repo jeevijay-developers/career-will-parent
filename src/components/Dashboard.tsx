@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Calendar, BookOpen, LogOut, ChevronDown, Phone } from 'lucide-react';
 import AttendanceCard from './AttendanceCard';
 import TestScoreCard from './TestScoreCard';
+import ConfirmationDialog from './ConfirmationDialog';
 import { getStudentData, getParentData, clearUserSession, transformTestScores, TestScore, ApiTestScore } from '../util/user';
 import { getTestScores, getAttendanceByRollNumber } from '../util/server';
 import toast from 'react-hot-toast';
@@ -39,6 +40,7 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
   const [loadingTestScores, setLoadingTestScores] = useState(false);
   const [attendanceData, setAttendanceData] = useState<any>(undefined);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Get real user data from user manager
   const studentData = getStudentData();
@@ -80,8 +82,16 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
 
   // Handle logout
   const handleLogout = () => {
+    // Show the confirmation dialog
+    setShowLogoutConfirm(true);
+  };
+
+  // Handle actual logout after confirmation
+  const confirmLogout = () => {
     clearUserSession();
     onLogout();
+    toast.success("Logged out successfully");
+    setShowLogoutConfirm(false);
   };
 
   // If no student data, show loading or error
@@ -238,6 +248,15 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
           loading={loadingTestScores}
         />
       </main>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </div>
   );
 };
