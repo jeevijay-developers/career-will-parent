@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Calendar, BookOpen, LogOut, ChevronDown, Phone } from 'lucide-react';
+import { Calendar, BookOpen, LogOut, ChevronDown, Phone } from 'lucide-react';
 import AttendanceCard from './AttendanceCard';
 import TestScoreCard from './TestScoreCard';
 import ConfirmationDialog from './ConfirmationDialog';
@@ -45,6 +45,7 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
   // Get real user data from user manager
   const studentData = getStudentData();
   const parentData = getParentData();
+  console.log("Student's data: ", studentData);
 
   // Fetch test scores and attendance when component mounts
   useEffect(() => {
@@ -140,11 +141,8 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
-              </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">Parent Portal</h1>
+                <h1 className="text-lg font-semibold text-gray-900">Hello, {parentData.fatherName}</h1>
                 <div className="flex items-center gap-1 text-sm text-gray-600">
                   <Phone className="w-3 h-3" />
                   <span>+91 {phoneNumber}</span>
@@ -209,9 +207,7 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
         {/* Child Info Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center">
-              <User className="w-6 h-6 text-white" />
-            </div>
+            <img src={studentData.image.url || '/user/user.jpg'} alt={`${currentChild.name}'s profile`} className="w-12 h-12 rounded-full" />
             <div>
               <h2 className="text-xl font-semibold text-gray-900">{currentChild.name}</h2>
               <p className="text-gray-600">

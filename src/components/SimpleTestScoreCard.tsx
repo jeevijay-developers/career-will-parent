@@ -49,6 +49,30 @@ const SimpleTestScoreCard: React.FC<SimpleTestScoreCardProps> = ({ testScores, l
     };
     return subjectMaxMarks[subjectName.toLowerCase()] || 100;
   };
+  
+  // Get subject color based on subject name for consistent coloring
+  const getSubjectColor = (subjectName: string): string => {
+    const subjectColors: { [key: string]: string } = {
+      'physics': 'bg-blue-500',
+      'chemistry': 'bg-purple-500',
+      'biology': 'bg-green-500',
+      'mathematics': 'bg-indigo-500',
+      'english': 'bg-yellow-500',
+      'hindi': 'bg-pink-500',
+      'social studies': 'bg-orange-500',
+      'science': 'bg-teal-500'
+    };
+    return subjectColors[subjectName.toLowerCase()] || 'bg-gray-500';
+  };
+  
+  // Get performance color based on percentage
+  const getPerformanceColor = (percentage: number): string => {
+    if (percentage >= 90) return 'bg-green-500';
+    if (percentage >= 75) return 'bg-blue-500';
+    if (percentage >= 60) return 'bg-yellow-500';
+    if (percentage >= 40) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
 
   // Calculate test max marks
   const getTestMaxMarks = (subjects: TestSubject[]): number => {
@@ -78,19 +102,19 @@ const SimpleTestScoreCard: React.FC<SimpleTestScoreCardProps> = ({ testScores, l
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Test Scores</h3>
+      <h3 className="text-lg font-semibold text-indigo-900 border-b border-indigo-100 pb-2 mb-4">Test Scores</h3>
 
       {/* Tests Overview */}
       {testScores.length > 0 && (
         <div className="mb-6">
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="p-3 bg-gray-50 rounded-lg text-center">
-              <div className="text-sm text-gray-600">Tests Taken</div>
-              <div className="text-xl font-bold text-gray-900">{testScores.length}</div>
+            <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-center">
+              <div className="text-sm text-blue-600">Tests Taken</div>
+              <div className="text-xl font-bold text-blue-700">{testScores.length}</div>
             </div>
-            <div className="p-3 bg-gray-50 rounded-lg text-center">
-              <div className="text-sm text-gray-600">Best Rank</div>
-              <div className="text-xl font-bold text-gray-900">
+            <div className="p-3 bg-green-50 border border-green-100 rounded-lg text-center">
+              <div className="text-sm text-green-600">Best Rank</div>
+              <div className="text-xl font-bold text-green-700">
                 {Math.min(...testScores.map(test => test.rank))}
               </div>
             </div>
@@ -107,30 +131,30 @@ const SimpleTestScoreCard: React.FC<SimpleTestScoreCardProps> = ({ testScores, l
           >
             {/* Test Header */}
             <div 
-              className="p-4 cursor-pointer hover:bg-gray-50"
+              className={`p-4 cursor-pointer hover:bg-gray-50 ${selectedTest === test._id ? 'border-l-4 border-l-blue-500' : ''}`}
               onClick={() => setSelectedTest(selectedTest === test._id ? null : test._id)}
             >
               <div className="flex justify-between items-center mb-2">
                 <h4 className="font-medium text-gray-900">{test.name}</h4>
-                <div className="px-2 py-1 bg-gray-900 text-white text-xs rounded">
+                <div className="px-2 py-1 bg-indigo-600 text-white text-xs rounded-full">
                   Rank {test.rank}
                 </div>
               </div>
               
               <div className="flex justify-between text-sm mb-3">
                 <div className="text-gray-600">
-                  <Calendar className="inline-block w-4 h-4 mr-1" />
+                  <Calendar className="inline-block w-4 h-4 mr-1 text-indigo-500" />
                   {formatDate(test.date)}
                 </div>
                 <div className="text-gray-600">
-                  <span className="font-medium">{test.percentile.toFixed(1)}%</span> Percentile
+                  <span className="font-medium text-indigo-600">{test.percentile.toFixed(1)}%</span> Percentile
                 </div>
               </div>
               
               {/* Progress Bar */}
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
-                  className="bg-gray-900 h-2 rounded-full"
+                  className={`${getPerformanceColor(test.percentile)} h-2 rounded-full`}
                   style={{ width: `${test.percentile}%` }}
                 ></div>
               </div>
@@ -139,7 +163,7 @@ const SimpleTestScoreCard: React.FC<SimpleTestScoreCardProps> = ({ testScores, l
             {/* Expanded View */}
             {selectedTest === test._id && (
               <div className="p-4 bg-gray-50 border-t border-gray-200">
-                <h5 className="font-medium text-gray-900 mb-2">Subject Marks</h5>
+                <h5 className="font-medium text-indigo-700 mb-2">Subject Marks</h5>
                 <div className="space-y-3">
                   {test.subjects.map(subject => {
                     const maxMarks = getMaxMarksForSubject(subject.name);
@@ -156,7 +180,7 @@ const SimpleTestScoreCard: React.FC<SimpleTestScoreCardProps> = ({ testScores, l
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-1.5">
                           <div 
-                            className="bg-gray-700 h-1.5 rounded-full"
+                            className={`${getSubjectColor(subject.name)} h-1.5 rounded-full`}
                             style={{ width: `${percentage}%` }}
                           ></div>
                         </div>
@@ -167,15 +191,15 @@ const SimpleTestScoreCard: React.FC<SimpleTestScoreCardProps> = ({ testScores, l
 
                 {/* Test Summary */}
                 <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4">
-                  <div className="text-sm">
-                    <div className="text-gray-600 mb-1">Total Marks</div>
-                    <div className="font-medium">
+                  <div className="text-sm p-2 rounded-lg bg-blue-50">
+                    <div className="text-blue-600 mb-1">Total Marks</div>
+                    <div className="font-medium text-blue-700">
                       {test.total}/{getTestMaxMarks(test.subjects)}
                     </div>
                   </div>
-                  <div className="text-sm">
-                    <div className="text-gray-600 mb-1">Percentile</div>
-                    <div className="font-medium">{test.percentile.toFixed(1)}%</div>
+                  <div className="text-sm p-2 rounded-lg bg-green-50">
+                    <div className="text-green-600 mb-1">Percentile</div>
+                    <div className="font-medium text-green-700">{test.percentile.toFixed(1)}%</div>
                   </div>
                   {test.batch !== "n/a" && (
                     <div className="text-sm col-span-2">

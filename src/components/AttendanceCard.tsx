@@ -73,10 +73,10 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendanceData, loading }) 
   }, [filteredRecords]);
 
   const getAttendanceStatus = (percentage: number) => {
-    if (percentage >= 90) return { status: 'excellent', color: 'text-gray-900', bg: 'bg-gray-900' };
-    if (percentage >= 80) return { status: 'good', color: 'text-gray-700', bg: 'bg-gray-700' };
-    if (percentage >= 75) return { status: 'average', color: 'text-gray-600', bg: 'bg-gray-600' };
-    return { status: 'poor', color: 'text-gray-500', bg: 'bg-gray-500' };
+    if (percentage >= 90) return { status: 'excellent', color: 'text-green-700', bg: 'bg-green-700' };
+    if (percentage >= 80) return { status: 'good', color: 'text-green-600', bg: 'bg-green-600' };
+    if (percentage >= 75) return { status: 'average', color: 'text-yellow-500', bg: 'bg-yellow-500' };
+    return { status: 'poor', color: 'text-red-500', bg: 'bg-red-500' };
   };
 
   const statusInfo = getAttendanceStatus(filteredStats.percentage);
@@ -228,7 +228,7 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendanceData, loading }) 
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{filteredStats.percentage}%</div>
+              <div className={`text-2xl font-bold ${statusInfo.color}`}>{filteredStats.percentage}%</div>
               <div className="text-xs text-gray-600 capitalize">{statusInfo.status}</div>
             </div>
           </div>
@@ -243,14 +243,14 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendanceData, loading }) 
           <div className="text-lg font-semibold text-gray-900">{filteredStats.total}</div>
         </div>
         <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <CheckCircle className="w-4 h-4 text-gray-600 mx-auto mb-1" />
+          <CheckCircle className="w-4 h-4 text-green-700 mx-auto mb-1" />
           <div className="text-xs text-gray-600">Present</div>
-          <div className="text-lg font-semibold text-gray-900">{filteredStats.present}</div>
+          <div className="text-lg font-semibold text-green-700">{filteredStats.present}</div>
         </div>
         <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <XCircle className="w-4 h-4 text-gray-600 mx-auto mb-1" />
+          <XCircle className="w-4 h-4 text-red-500 mx-auto mb-1" />
           <div className="text-xs text-gray-600">Absent</div>
-          <div className="text-lg font-semibold text-gray-900">{absent}</div>
+          <div className="text-lg font-semibold text-red-600">{absent}</div>
         </div>
       </div>
 
@@ -290,7 +290,7 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendanceData, loading }) 
           {presentDays.length > 0 && (
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="w-4 h-4 text-green-700" />
                 <h4 className="font-medium text-gray-900">Present Days ({presentDays.length})</h4>
               </div>
               <div className="max-h-80 overflow-y-auto">
@@ -299,7 +299,7 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendanceData, loading }) 
                     <div key={record._id} className="text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
                       <div className="flex justify-between mb-1">
                         <span className="font-medium">{formatDate(record.date)}</span>
-                        <span className="text-green-500 font-medium">Present</span>
+                        <span className="text-green-700 font-medium">Present</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 mt-2">
                         <div>
@@ -330,7 +330,7 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendanceData, loading }) 
 
       {/* Status Message */}
       <div className={`p-3 rounded-lg border-l-4 ${statusInfo.bg.replace('bg-', 'border-l-')} bg-gray-50`}>
-        <div className="text-sm text-gray-700">
+        <div className={`text-sm ${filteredStats.percentage < 75 ? 'text-red-600' : 'text-gray-700'}`}>
           {filteredStats.percentage >= 90 && "Excellent attendance! Keep it up."}
           {filteredStats.percentage >= 80 && filteredStats.percentage < 90 && "Good attendance record."}
           {filteredStats.percentage >= 75 && filteredStats.percentage < 80 && "Attendance needs improvement."}
