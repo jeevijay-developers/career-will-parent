@@ -99,6 +99,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {step === 'phone' ? (
             <form onSubmit={handlePhoneSubmit}>
               <div className="mb-6">
+                
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                   Mobile Number
                 </label>
