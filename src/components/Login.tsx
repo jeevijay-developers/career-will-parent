@@ -90,7 +90,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8 flex flex-col justify-center items-center gap-1">
-          <img src="./logo.png" alt="Logo" className="aspect-square w-20 h-20" />
+          <img src="/logo/logo.png" alt="Logo" className="aspect-square w-20 h-20" />
           <h1 className="text-2xl font-bold text-gray-900">Parent Portal</h1>
           <p className="text-gray-600 mt-2">Access your child's academic progress</p>
         </div>
@@ -99,7 +99,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {step === 'phone' ? (
             <form onSubmit={handlePhoneSubmit}>
               <div className="mb-6">
-                
+
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                   Mobile Number
                 </label>
