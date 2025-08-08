@@ -176,9 +176,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 text-center mt-4">
-                Didn't receive OTP? <button type="button" className="text-gray-900 font-medium">Resend</button>
-              </p>
             </form>
           )}
         </div>
