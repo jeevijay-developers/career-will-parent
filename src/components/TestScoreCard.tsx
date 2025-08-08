@@ -34,14 +34,6 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores, studentId, lo
 
   // Get real student data
   const studentData = getStudentData();
-  console.log('Student data loaded:', studentData);
-
-  // Log student ID for debugging (in production, this would be used for API calls)
-  useEffect(() => {
-    if (studentId) {
-      console.log('TestScoreCard loaded for student:', studentId);
-    }
-  }, [studentId]);
 
   // Use provided test scores if available, otherwise fall back to enhanced mock data
   const enhancedTestScores: TestScore[] = useMemo(() => {

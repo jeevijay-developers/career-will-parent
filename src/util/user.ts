@@ -278,19 +278,19 @@ export interface TestScore {
 
 // Transform API test scores to component format
 export const transformTestScores = (apiTestScores: ApiTestScore[]): TestScore[] => {
-  console.log('Raw API test scores received:', apiTestScores);
+//   console.log('Raw API test scores received:', apiTestScores);
   
   const transformedScores: TestScore[] = [];
   
   apiTestScores.forEach(testRecord => {
-    console.log('Processing test record:', {
-      name: testRecord.name,
-      date: testRecord.date,
-      rank: testRecord.rank,
-      percentile: testRecord.percentile,
-      total: testRecord.total,
-      subjects: testRecord.subjects.length
-    });
+    // console.log('Processing test record:', {
+    //   name: testRecord.name,
+    //   date: testRecord.date,
+    //   rank: testRecord.rank,
+    //   percentile: testRecord.percentile,
+    //   total: testRecord.total,
+    //   subjects: testRecord.subjects.length
+    // });
     
     testRecord.subjects.forEach(subject => {
       // Assuming max marks based on subject (you might want to get this from API)
@@ -316,7 +316,7 @@ export const transformTestScores = (apiTestScores: ApiTestScore[]): TestScore[] 
     });
   });
   
-  console.log('Transformed test scores:', transformedScores);
+//   console.log('Transformed test scores:', transformedScores);
   
   // Sort by date (newest first)
   return transformedScores.sort((a, b) => new Date(b.testDate).getTime() - new Date(a.testDate).getTime());

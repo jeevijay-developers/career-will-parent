@@ -28,9 +28,7 @@ function App() {
     checkExistingSession();
   }, []);
 
-  const handleLogin = (phoneNumber: string, token?: string, studentData?: any) => {
-    // token and studentData are saved in localStorage by the Login component
-    // We only need the phoneNumber for the UI state
+  const handleLogin = (phoneNumber: string) => {
     setUserPhone(phoneNumber);
     setAppState('dashboard');
   };
