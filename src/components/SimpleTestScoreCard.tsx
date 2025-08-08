@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar, BookOpen } from 'lucide-react';
 
 // Interface matching the API response structure
 interface TestSubject {
@@ -93,8 +93,10 @@ const SimpleTestScoreCard: React.FC<SimpleTestScoreCardProps> = ({ testScores, l
   if (!testScores || testScores.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <h3 className="text-lg font-semibold text-indigo-900 border-b border-indigo-100 pb-2 mb-4">Test Scores</h3>
         <div className="text-center py-8">
-          <p className="text-gray-600">No test scores available.</p>
+          <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-600">No test scores available for this student. Please check back later.</p>
         </div>
       </div>
     );

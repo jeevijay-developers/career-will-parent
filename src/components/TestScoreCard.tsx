@@ -35,25 +35,9 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores, loading = fal
   // Get real student data
   const studentData = getStudentData();
 
-  // Use provided test scores if available, otherwise fall back to enhanced mock data
+  // Only use provided test scores, never fallback to mock data
   const enhancedTestScores: TestScore[] = useMemo(() => {
-    if (testScores && testScores.length > 0) {
-      return testScores;
-    }
-    
-    // Enhanced mock test scores with more data
-    return [
-      { subject: 'Mathematics', maxMarks: 100, obtainedMarks: 92, percentage: 92, testDate: '2024-12-10', testType: 'Unit Test' },
-      { subject: 'Science', maxMarks: 100, obtainedMarks: 88, percentage: 88, testDate: '2024-12-08', testType: 'Monthly Test' },
-      { subject: 'English', maxMarks: 100, obtainedMarks: 85, percentage: 85, testDate: '2024-12-05', testType: 'Unit Test' },
-      { subject: 'Social Studies', maxMarks: 100, obtainedMarks: 90, percentage: 90, testDate: '2024-12-03', testType: 'Quarterly Exam' },
-      { subject: 'Hindi', maxMarks: 100, obtainedMarks: 87, percentage: 87, testDate: '2024-12-01', testType: 'Unit Test' },
-      { subject: 'Mathematics', maxMarks: 100, obtainedMarks: 89, percentage: 89, testDate: '2024-11-25', testType: 'Monthly Test' },
-      { subject: 'Science', maxMarks: 100, obtainedMarks: 91, percentage: 91, testDate: '2024-11-20', testType: 'Unit Test' },
-      { subject: 'English', maxMarks: 100, obtainedMarks: 83, percentage: 83, testDate: '2024-11-15', testType: 'Monthly Test' },
-      { subject: 'Social Studies', maxMarks: 100, obtainedMarks: 88, percentage: 88, testDate: '2024-11-10', testType: 'Unit Test' },
-      { subject: 'Hindi', maxMarks: 100, obtainedMarks: 85, percentage: 85, testDate: '2024-11-05', testType: 'Monthly Test' }
-    ];
+    return testScores && testScores.length > 0 ? testScores : [];
   }, [testScores]);
 
   const filteredTestScores = useMemo(() => {
@@ -79,12 +63,33 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores, loading = fal
   }, [enhancedTestScores, dateRange, subjectFilter]);
 
   const getGradeInfo = (percentage: number) => {
-    if (percentage >= 90) return { grade: 'A+', color: 'text-gray-900', bg: 'bg-gray-900' };
-    if (percentage >= 80) return { grade: 'A', color: 'text-gray-800', bg: 'bg-gray-800' };
-    if (percentage >= 70) return { grade: 'B+', color: 'text-gray-700', bg: 'bg-gray-700' };
-    if (percentage >= 60) return { grade: 'B', color: 'text-gray-600', bg: 'bg-gray-600' };
-    if (percentage >= 50) return { grade: 'C', color: 'text-gray-500', bg: 'bg-gray-500' };
-    return { grade: 'D', color: 'text-gray-400', bg: 'bg-gray-400' };
+    if (percentage >= 90) return { grade: 'A+', color: 'text-green-600', bg: 'bg-green-600' };
+    if (percentage >= 80) return { grade: 'A', color: 'text-green-500', bg: 'bg-green-500' };
+    if (percentage >= 70) return { grade: 'B+', color: 'text-blue-600', bg: 'bg-blue-600' };
+    if (percentage >= 60) return { grade: 'B', color: 'text-blue-500', bg: 'bg-blue-500' };
+    if (percentage >= 50) return { grade: 'C', color: 'text-yellow-500', bg: 'bg-yellow-500' };
+    return { grade: 'D', color: 'text-red-500', bg: 'bg-red-500' };
+  };
+
+  // Get subject color based on subject name for consistent coloring
+  const getSubjectColor = (subject: string): string => {
+    // Base colors that will be assigned to subjects as needed
+    const baseColors = [
+      'bg-indigo-500', 'bg-teal-500', 'bg-blue-500', 'bg-purple-500', 
+      'bg-green-500', 'bg-yellow-500', 'bg-pink-500', 'bg-orange-500',
+      'bg-red-500', 'bg-sky-500', 'bg-amber-500', 'bg-lime-500'
+    ];
+    
+    // Get unique subjects from the filtered test scores
+    const uniqueSubjects = Array.from(new Set(filteredTestScores.map(test => test.subject)));
+    const subjectColorMap: { [key: string]: string } = {};
+    
+    // Create a map of subject to color
+    uniqueSubjects.forEach((subj, index) => {
+      subjectColorMap[subj] = baseColors[index % baseColors.length];
+    });
+    
+    return subjectColorMap[subject] || 'bg-gray-500';
   };
 
   const averagePercentage = filteredTestScores.length > 0 
@@ -269,7 +274,7 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores, loading = fal
               {/* Progress Bar */}
               <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                 <div 
-                  className="bg-gray-900 h-2 rounded-full transition-all duration-300"
+                  className={`${getSubjectColor(test.subject)} h-2 rounded-full transition-all duration-300`}
                   style={{ width: `${test.percentage}%` }}
                 ></div>
               </div>
@@ -370,7 +375,7 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores, loading = fal
           <p className="text-gray-600">
             {dateRange.startDate || dateRange.endDate || subjectFilter 
               ? 'No test scores found for the selected filters.' 
-              : 'No test scores available yet.'
+              : 'No test scores available for this student. Please check back later.'
             }
           </p>
           {(dateRange.startDate || dateRange.endDate || subjectFilter) && (
@@ -378,7 +383,7 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores, loading = fal
               onClick={clearFilters}
               className="mt-2 text-sm text-gray-900 font-medium hover:underline"
             >
-              Clear filters to see all scores
+              Clear filters to check for available scores
             </button>
           )}
         </div>

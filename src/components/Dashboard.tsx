@@ -7,6 +7,29 @@ import { getStudentData, getParentData, clearUserSession, transformTestScores, T
 import { getTestScores, getAttendanceByRollNumber } from '../util/server';
 import toast from 'react-hot-toast';
 
+// API response attendance record interface
+interface AttendanceRecord {
+  _id: string;
+  rollNo: string;
+  name: string;
+  inTime: string;
+  outTime: string;
+  lateArrival: string;
+  earlyDeparture: string;
+  workingHours: string;
+  otDuration: string;
+  presentStatus: string;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface AttendanceResponse {
+  data: AttendanceRecord[];
+  status: boolean;
+}
+
 interface Child {
   id: string;
   name: string;
@@ -38,7 +61,7 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
   const [showChildDropdown, setShowChildDropdown] = useState(false);
   const [testScores, setTestScores] = useState<TestScore[]>([]);
   const [loadingTestScores, setLoadingTestScores] = useState(false);
-  const [attendanceData, setAttendanceData] = useState<any>(undefined);
+  const [attendanceData, setAttendanceData] = useState<AttendanceResponse | undefined>(undefined);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -108,27 +131,26 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
     );
   }
 
-  // Transform real data to match expected format
+  // Transform real data to match expected format - without any mock data
   const children: Child[] = [
     {
       id: studentData._id,
       name: studentData.name,
       class: studentData.class,
-      section: 'A', // Default section since not in API response
+      section: '-', // Default placeholder since section is not in the API response
       rollNumber: studentData.rollNo.toString(),
-      attendance: {
-        present: 87, // Mock data - would come from API
-        total: 95,
-        percentage: 91.6
+      attendance: attendanceData ? {
+        present: attendanceData.data.filter((record: AttendanceRecord) => record.presentStatus === 'P').length,
+        total: attendanceData.data.length,
+        percentage: attendanceData.data.length > 0 
+          ? Math.round((attendanceData.data.filter((record: AttendanceRecord) => record.presentStatus === 'P').length / attendanceData.data.length) * 100 * 10) / 10
+          : 0
+      } : {
+        present: 0,
+        total: 0,
+        percentage: 0
       },
-      testScores: testScores.length > 0 ? testScores : [
-        // Fallback mock test scores if API data not available
-        { subject: 'Mathematics', maxMarks: 100, obtainedMarks: 92, percentage: 92, testDate: '2024-12-10', testType: 'Unit Test' },
-        { subject: 'Science', maxMarks: 100, obtainedMarks: 88, percentage: 88, testDate: '2024-12-08', testType: 'Monthly Test' },
-        { subject: 'English', maxMarks: 100, obtainedMarks: 85, percentage: 85, testDate: '2024-12-05', testType: 'Unit Test' },
-        { subject: 'Social Studies', maxMarks: 100, obtainedMarks: 90, percentage: 90, testDate: '2024-12-03', testType: 'Quarterly Exam' },
-        { subject: 'Hindi', maxMarks: 100, obtainedMarks: 87, percentage: 87, testDate: '2024-12-01', testType: 'Unit Test' }
-      ]
+      testScores: testScores || []
     }
   ];
 
@@ -207,11 +229,20 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
         {/* Child Info Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3 mb-3">
-            <img src={studentData.image.url || '/user/user.jpg'} alt={`${currentChild.name}'s profile`} className="w-12 h-12 rounded-full" />
+            <img 
+              src={studentData.image?.url || '/user/user.jpg'} 
+              alt={`${currentChild.name}'s profile`} 
+              className="w-12 h-12 rounded-full"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src = '/user/user.jpg';
+              }} 
+            />
             <div>
               <h2 className="text-xl font-semibold text-gray-900">{currentChild.name}</h2>
               <p className="text-gray-600">
-                Class {currentChild.class} {currentChild.section} • Roll No. {currentChild.rollNumber}
+                Class {currentChild.class || '-'} {currentChild.section} • Roll No. {currentChild.rollNumber}
               </p>
             </div>
           </div>
@@ -220,12 +251,16 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
             <div className="text-center p-3 bg-gray-50 rounded-lg">
               <Calendar className="w-5 h-5 text-gray-600 mx-auto mb-1" />
               <div className="text-sm text-gray-600">Attendance</div>
-              <div className="text-lg font-semibold text-gray-900">{currentChild.attendance.percentage}%</div>
+              <div className="text-lg font-semibold text-gray-900">
+                {attendanceData ? `${currentChild.attendance.percentage}%` : 'No data'}
+              </div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
               <BookOpen className="w-5 h-5 text-gray-600 mx-auto mb-1" />
               <div className="text-sm text-gray-600">Test Reports</div>
-              <div className="text-lg font-semibold text-gray-900">{currentChild.testScores.length}</div>
+              <div className="text-lg font-semibold text-gray-900">
+                {testScores.length || 'No data'}
+              </div>
             </div>
           </div>
         </div>
