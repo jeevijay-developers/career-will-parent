@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { BookOpen, TrendingUp, Calendar, Award, Filter } from 'lucide-react';
 import { getStudentData } from '../util/user';
 
@@ -23,7 +23,7 @@ interface TestScoreCardProps {
   loading?: boolean; // Loading state for test scores
 }
 
-const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores, studentId, loading = false }) => {
+const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores, loading = false }) => {
   const [selectedTest, setSelectedTest] = useState<TestScore | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [dateRange, setDateRange] = useState({
