@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { BookOpen, TrendingUp, Calendar, Award, Filter, ChevronDown } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { BookOpen, TrendingUp, Calendar, Award, Filter } from 'lucide-react';
+import { getStudentData } from '../util/user';
 
 interface TestScore {
   subject: string;
@@ -8,13 +9,21 @@ interface TestScore {
   percentage: number;
   testDate: string;
   testType: string;
+  // Additional fields from API
+  testId?: string;
+  rank?: number;
+  percentile?: number;
+  totalMarks?: number;
+  batch?: string;
 }
 
 interface TestScoreCardProps {
   testScores: TestScore[];
+  studentId?: string; // Optional student ID for API calls
+  loading?: boolean; // Loading state for test scores
 }
 
-const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores }) => {
+const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores, studentId, loading = false }) => {
   const [selectedTest, setSelectedTest] = useState<TestScore | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [dateRange, setDateRange] = useState({
@@ -23,19 +32,37 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores }) => {
   });
   const [subjectFilter, setSubjectFilter] = useState('');
 
-  // Enhanced test scores with more data
-  const enhancedTestScores: TestScore[] = useMemo(() => [
-    { subject: 'Mathematics', maxMarks: 100, obtainedMarks: 92, percentage: 92, testDate: '2024-12-10', testType: 'Unit Test' },
-    { subject: 'Science', maxMarks: 100, obtainedMarks: 88, percentage: 88, testDate: '2024-12-08', testType: 'Monthly Test' },
-    { subject: 'English', maxMarks: 100, obtainedMarks: 85, percentage: 85, testDate: '2024-12-05', testType: 'Unit Test' },
-    { subject: 'Social Studies', maxMarks: 100, obtainedMarks: 90, percentage: 90, testDate: '2024-12-03', testType: 'Quarterly Exam' },
-    { subject: 'Hindi', maxMarks: 100, obtainedMarks: 87, percentage: 87, testDate: '2024-12-01', testType: 'Unit Test' },
-    { subject: 'Mathematics', maxMarks: 100, obtainedMarks: 89, percentage: 89, testDate: '2024-11-25', testType: 'Monthly Test' },
-    { subject: 'Science', maxMarks: 100, obtainedMarks: 91, percentage: 91, testDate: '2024-11-20', testType: 'Unit Test' },
-    { subject: 'English', maxMarks: 100, obtainedMarks: 83, percentage: 83, testDate: '2024-11-15', testType: 'Monthly Test' },
-    { subject: 'Social Studies', maxMarks: 100, obtainedMarks: 88, percentage: 88, testDate: '2024-11-10', testType: 'Unit Test' },
-    { subject: 'Hindi', maxMarks: 100, obtainedMarks: 85, percentage: 85, testDate: '2024-11-05', testType: 'Monthly Test' }
-  ], []);
+  // Get real student data
+  const studentData = getStudentData();
+  console.log('Student data loaded:', studentData);
+
+  // Log student ID for debugging (in production, this would be used for API calls)
+  useEffect(() => {
+    if (studentId) {
+      console.log('TestScoreCard loaded for student:', studentId);
+    }
+  }, [studentId]);
+
+  // Use provided test scores if available, otherwise fall back to enhanced mock data
+  const enhancedTestScores: TestScore[] = useMemo(() => {
+    if (testScores && testScores.length > 0) {
+      return testScores;
+    }
+    
+    // Enhanced mock test scores with more data
+    return [
+      { subject: 'Mathematics', maxMarks: 100, obtainedMarks: 92, percentage: 92, testDate: '2024-12-10', testType: 'Unit Test' },
+      { subject: 'Science', maxMarks: 100, obtainedMarks: 88, percentage: 88, testDate: '2024-12-08', testType: 'Monthly Test' },
+      { subject: 'English', maxMarks: 100, obtainedMarks: 85, percentage: 85, testDate: '2024-12-05', testType: 'Unit Test' },
+      { subject: 'Social Studies', maxMarks: 100, obtainedMarks: 90, percentage: 90, testDate: '2024-12-03', testType: 'Quarterly Exam' },
+      { subject: 'Hindi', maxMarks: 100, obtainedMarks: 87, percentage: 87, testDate: '2024-12-01', testType: 'Unit Test' },
+      { subject: 'Mathematics', maxMarks: 100, obtainedMarks: 89, percentage: 89, testDate: '2024-11-25', testType: 'Monthly Test' },
+      { subject: 'Science', maxMarks: 100, obtainedMarks: 91, percentage: 91, testDate: '2024-11-20', testType: 'Unit Test' },
+      { subject: 'English', maxMarks: 100, obtainedMarks: 83, percentage: 83, testDate: '2024-11-15', testType: 'Monthly Test' },
+      { subject: 'Social Studies', maxMarks: 100, obtainedMarks: 88, percentage: 88, testDate: '2024-11-10', testType: 'Unit Test' },
+      { subject: 'Hindi', maxMarks: 100, obtainedMarks: 85, percentage: 85, testDate: '2024-11-05', testType: 'Monthly Test' }
+    ];
+  }, [testScores]);
 
   const filteredTestScores = useMemo(() => {
     let filtered = enhancedTestScores;
@@ -93,7 +120,14 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores }) => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Test Scores</h3>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Test Scores</h3>
+            {studentData && (
+              <p className="text-sm text-gray-600">
+                {studentData.name} • Class {studentData.class} • Roll No. {studentData.rollNo}
+              </p>
+            )}
+          </div>
         </div>
         <button
           onClick={() => setShowFilter(!showFilter)}
@@ -156,8 +190,16 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores }) => {
         </div>
       )}
 
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="text-gray-600 mt-2">Loading test scores...</p>
+        </div>
+      )}
+
       {/* Overall Performance */}
-      {filteredTestScores.length > 0 && (
+      {!loading && filteredTestScores.length > 0 && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -171,15 +213,41 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores }) => {
             </div>
           </div>
           <div className="text-2xl font-bold text-gray-900">{averagePercentage.toFixed(1)}%</div>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 mb-3">
             Average across {filteredTestScores.length} test{filteredTestScores.length !== 1 ? 's' : ''}
+          </div>
+          
+          {/* Additional Performance Metrics */}
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            {(() => {
+              const bestRank = Math.min(...filteredTestScores.filter(t => t.rank).map(t => t.rank!));
+              const bestPercentile = Math.max(...filteredTestScores.filter(t => t.percentile).map(t => t.percentile!));
+              
+              return (
+                <>
+                  {bestRank !== Infinity && (
+                    <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                      <div className="text-xs text-gray-600">Best Rank</div>
+                      <div className="text-lg font-semibold text-gray-900">{bestRank}</div>
+                    </div>
+                  )}
+                  {bestPercentile !== -Infinity && (
+                    <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                      <div className="text-xs text-gray-600">Best Percentile</div>
+                      <div className="text-lg font-semibold text-gray-900">{bestPercentile.toFixed(1)}%</div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
 
       {/* Subject-wise Scores */}
-      <div className="space-y-3">
-        {filteredTestScores.map((test, index) => {
+      {!loading && (
+        <div className="space-y-3">
+          {filteredTestScores.map((test, index) => {
           const gradeInfo = getGradeInfo(test.percentage);
           
           return (
@@ -239,6 +307,50 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores }) => {
                     <div className="text-gray-900 font-medium">
                       {test.obtainedMarks} out of {test.maxMarks}
                     </div>
+                    {test.rank && (
+                      <>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <TrendingUp className="w-4 h-4" />
+                          <span>Rank</span>
+                        </div>
+                        <div className="text-gray-900 font-medium">
+                          {test.rank}
+                        </div>
+                      </>
+                    )}
+                    {test.percentile && (
+                      <>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <TrendingUp className="w-4 h-4" />
+                          <span>Percentile</span>
+                        </div>
+                        <div className="text-gray-900 font-medium">
+                          {test.percentile}%
+                        </div>
+                      </>
+                    )}
+                    {test.totalMarks && (
+                      <>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <BookOpen className="w-4 h-4" />
+                          <span>Total Test Marks</span>
+                        </div>
+                        <div className="text-gray-900 font-medium">
+                          {test.totalMarks}
+                        </div>
+                      </>
+                    )}
+                    {test.batch && (
+                      <>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <BookOpen className="w-4 h-4" />
+                          <span>Batch</span>
+                        </div>
+                        <div className="text-gray-900 font-medium">
+                          {test.batch}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Performance Feedback */}
@@ -257,9 +369,10 @@ const TestScoreCard: React.FC<TestScoreCardProps> = ({ testScores }) => {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
-      {filteredTestScores.length === 0 && (
+      {!loading && filteredTestScores.length === 0 && (
         <div className="text-center py-8">
           <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-600">

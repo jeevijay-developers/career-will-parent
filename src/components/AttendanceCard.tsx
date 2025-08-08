@@ -1,20 +1,37 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, Users, CheckCircle, XCircle, Filter, ChevronDown } from 'lucide-react';
+import { Calendar, Users, CheckCircle, XCircle, Filter, ChevronDown, Clock } from 'lucide-react';
+import { getStudentData } from '../util/user';
 
+// API response attendance record interface
 interface AttendanceRecord {
+  _id: string;
+  rollNo: string;
+  name: string;
+  inTime: string;
+  outTime: string;
+  lateArrival: string;
+  earlyDeparture: string;
+  workingHours: string;
+  otDuration: string;
+  presentStatus: string;
   date: string;
-  status: 'present' | 'absent';
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface AttendanceResponse {
+  data: AttendanceRecord[];
+  status: boolean;
 }
 
 interface AttendanceProps {
-  attendance: {
-    present: number;
-    total: number;
-    percentage: number;
-  };
+  attendanceData?: AttendanceResponse;
+  loading: boolean;
+  rollNumber?: string; // Optional since we don't use it directly in this component
 }
 
-const AttendanceCard: React.FC<AttendanceProps> = ({ attendance }) => {
+const AttendanceCard: React.FC<AttendanceProps> = ({ attendanceData, loading }) => {
   const [showFilter, setShowFilter] = useState(false);
   const [dateRange, setDateRange] = useState({
     startDate: '',
@@ -22,25 +39,16 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendance }) => {
   });
   const [showDetailedView, setShowDetailedView] = useState(false);
 
-  // Mock attendance records - In real app, this would come from API
-  const attendanceRecords: AttendanceRecord[] = useMemo(() => {
-    const records: AttendanceRecord[] = [];
-    const startDate = new Date('2024-09-01');
-    const endDate = new Date('2024-12-15');
-    
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      // Skip weekends
-      if (d.getDay() === 0 || d.getDay() === 6) continue;
-      
-      // Random attendance with 91.6% probability of being present
-      const isPresent = Math.random() < 0.916;
-      records.push({
-        date: d.toISOString().split('T')[0],
-        status: isPresent ? 'present' : 'absent'
-      });
+  // Get real student data
+  const studentData = getStudentData();
+  
+  // Use the actual attendance records from the API
+  const attendanceRecords = useMemo(() => {
+    if (!attendanceData || !attendanceData.data) {
+      return [];
     }
-    return records;
-  }, []);
+    return attendanceData.data;
+  }, [attendanceData]);
 
   const filteredRecords = useMemo(() => {
     if (!dateRange.startDate && !dateRange.endDate) {
@@ -57,7 +65,7 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendance }) => {
   }, [attendanceRecords, dateRange]);
 
   const filteredStats = useMemo(() => {
-    const present = filteredRecords.filter(r => r.status === 'present').length;
+    const present = filteredRecords.filter(r => r.presentStatus === 'P').length;
     const total = filteredRecords.length;
     const percentage = total > 0 ? Math.round((present / total) * 100 * 10) / 10 : 0;
     
@@ -86,15 +94,64 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendance }) => {
     setDateRange({ startDate: '', endDate: '' });
   };
 
-  const absentDays = filteredRecords.filter(r => r.status === 'absent');
-  const presentDays = filteredRecords.filter(r => r.status === 'present');
+  // Get present and absent days from filtered records
+  const absentDays = filteredRecords.filter(r => r.presentStatus !== 'P');
+  const presentDays = filteredRecords.filter(r => r.presentStatus === 'P');
   
+  // Show loading state if data is loading
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Calendar className="w-5 h-5 text-gray-600" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Attendance Overview</h3>
+          </div>
+        </div>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="text-gray-600 mt-2">Loading attendance data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no data
+  if (!attendanceData || !attendanceData.data || attendanceData.data.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Calendar className="w-5 h-5 text-gray-600" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Attendance Overview</h3>
+          </div>
+        </div>
+        <div className="text-center py-8">
+          <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-600">No attendance records available.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Attendance Overview</h3>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Attendance Overview</h3>
+            {studentData && (
+              <p className="text-sm text-gray-600">
+                {studentData.name} • Class {studentData.class} • Roll No. {studentData.rollNo}
+              </p>
+            )}
+            {!studentData && attendanceData.data.length > 0 && (
+              <p className="text-sm text-gray-600">
+                {attendanceData.data[0].name} • Roll No. {attendanceData.data[0].rollNo}
+              </p>
+            )}
+          </div>
         </div>
         <button
           onClick={() => setShowFilter(!showFilter)}
@@ -213,13 +270,16 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendance }) => {
           {absentDays.length > 0 && (
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
-                <XCircle className="w-4 h-4 text-gray-600" />
+                <XCircle className="w-4 h-4 text-red-500" />
                 <h4 className="font-medium text-gray-900">Absent Days ({absentDays.length})</h4>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {absentDays.map((record, index) => (
-                  <div key={index} className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded">
-                    {formatDate(record.date)}
+              <div className="space-y-2">
+                {absentDays.map((record) => (
+                  <div key={record._id} className="text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div className="flex justify-between mb-1">
+                      <span className="font-medium">{formatDate(record.date)}</span>
+                      <span className="text-red-500 font-medium">Absent</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -230,14 +290,35 @@ const AttendanceCard: React.FC<AttendanceProps> = ({ attendance }) => {
           {presentDays.length > 0 && (
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
-                <CheckCircle className="w-4 h-4 text-gray-600" />
+                <CheckCircle className="w-4 h-4 text-green-500" />
                 <h4 className="font-medium text-gray-900">Present Days ({presentDays.length})</h4>
               </div>
-              <div className="max-h-40 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-2">
-                  {presentDays.map((record, index) => (
-                    <div key={index} className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded">
-                      {formatDate(record.date)}
+              <div className="max-h-80 overflow-y-auto">
+                <div className="space-y-2">
+                  {presentDays.map((record) => (
+                    <div key={record._id} className="text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div className="flex justify-between mb-1">
+                        <span className="font-medium">{formatDate(record.date)}</span>
+                        <span className="text-green-500 font-medium">Present</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div>
+                          <span className="text-gray-500">In Time:</span> 
+                          <span className="ml-1 font-medium">{record.inTime}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Out Time:</span> 
+                          <span className="ml-1 font-medium">{record.outTime === 'N/A' ? '-' : record.outTime}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Late By:</span> 
+                          <span className="ml-1 font-medium">{record.lateArrival}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Working Hours:</span> 
+                          <span className="ml-1 font-medium">{record.workingHours}</span>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

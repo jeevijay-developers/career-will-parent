@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Calendar, BookOpen, LogOut, ChevronDown, Phone } from 'lucide-react';
 import AttendanceCard from './AttendanceCard';
 import TestScoreCard from './TestScoreCard';
+import { getStudentData, getParentData, clearUserSession, transformTestScores, TestScore, ApiTestScore } from '../util/user';
+import { getTestScores, getAttendanceByRollNumber } from '../util/server';
+import toast from 'react-hot-toast';
 
 interface Child {
   id: string;
@@ -32,44 +35,88 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
   const [selectedChild, setSelectedChild] = useState(0);
   const [showChildDropdown, setShowChildDropdown] = useState(false);
+  const [testScores, setTestScores] = useState<TestScore[]>([]);
+  const [loadingTestScores, setLoadingTestScores] = useState(false);
+  const [attendanceData, setAttendanceData] = useState<any>(undefined);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
 
-  // Mock data - In real app, this would come from API
+  // Get real user data from user manager
+  const studentData = getStudentData();
+  const parentData = getParentData();
+
+  // Fetch test scores and attendance when component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      if (studentData?.rollNo) {
+        // Fetch test scores
+        setLoadingTestScores(true);
+        try {
+          const apiTestScores: ApiTestScore[] = await getTestScores(studentData.rollNo.toString());
+          const transformedScores = transformTestScores(apiTestScores);
+          setTestScores(transformedScores);
+        } catch (error) {
+          console.error('Error fetching test scores:', error);
+          toast.error('Failed to load test scores');
+        } finally {
+          setLoadingTestScores(false);
+        }
+        
+        // Fetch attendance data
+        setLoadingAttendance(true);
+        try {
+          const attendance = await getAttendanceByRollNumber(studentData.rollNo.toString());
+          setAttendanceData(attendance);
+        } catch (error) {
+          console.error('Error fetching attendance:', error);
+          toast.error('Failed to load attendance data');
+        } finally {
+          setLoadingAttendance(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [studentData?.rollNo]);
+
+  // Handle logout
+  const handleLogout = () => {
+    clearUserSession();
+    onLogout();
+  };
+
+  // If no student data, show loading or error
+  if (!studentData || !parentData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading...</h2>
+          <p className="text-gray-600">Getting your student information</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Transform real data to match expected format
   const children: Child[] = [
     {
-      id: '1',
-      name: 'Arjun Kumar',
-      class: '10th',
-      section: 'A',
-      rollNumber: '15',
+      id: studentData._id,
+      name: studentData.name,
+      class: studentData.class,
+      section: 'A', // Default section since not in API response
+      rollNumber: studentData.rollNo.toString(),
       attendance: {
-        present: 87,
+        present: 87, // Mock data - would come from API
         total: 95,
         percentage: 91.6
       },
-      testScores: [
+      testScores: testScores.length > 0 ? testScores : [
+        // Fallback mock test scores if API data not available
         { subject: 'Mathematics', maxMarks: 100, obtainedMarks: 92, percentage: 92, testDate: '2024-12-10', testType: 'Unit Test' },
         { subject: 'Science', maxMarks: 100, obtainedMarks: 88, percentage: 88, testDate: '2024-12-08', testType: 'Monthly Test' },
         { subject: 'English', maxMarks: 100, obtainedMarks: 85, percentage: 85, testDate: '2024-12-05', testType: 'Unit Test' },
         { subject: 'Social Studies', maxMarks: 100, obtainedMarks: 90, percentage: 90, testDate: '2024-12-03', testType: 'Quarterly Exam' },
         { subject: 'Hindi', maxMarks: 100, obtainedMarks: 87, percentage: 87, testDate: '2024-12-01', testType: 'Unit Test' }
-      ]
-    },
-    {
-      id: '2',
-      name: 'Priya Kumar',
-      class: '7th',
-      section: 'B',
-      rollNumber: '23',
-      attendance: {
-        present: 92,
-        total: 95,
-        percentage: 96.8
-      },
-      testScores: [
-        { subject: 'Mathematics', maxMarks: 100, obtainedMarks: 95, percentage: 95, testDate: '2024-12-10', testType: 'Unit Test' },
-        { subject: 'Science', maxMarks: 100, obtainedMarks: 91, percentage: 91, testDate: '2024-12-08', testType: 'Monthly Test' },
-        { subject: 'English', maxMarks: 100, obtainedMarks: 89, percentage: 89, testDate: '2024-12-05', testType: 'Unit Test' },
-        { subject: 'Social Studies', maxMarks: 100, obtainedMarks: 93, percentage: 93, testDate: '2024-12-03', testType: 'Quarterly Exam' }
       ]
     }
   ];
@@ -95,7 +142,7 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
               </div>
             </div>
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               title="Logout"
             >
@@ -178,10 +225,18 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
         </div>
 
         {/* Attendance Section */}
-        <AttendanceCard attendance={currentChild.attendance} />
+        <AttendanceCard 
+          attendanceData={attendanceData} 
+          loading={loadingAttendance}
+          rollNumber={currentChild.rollNumber}
+        />
 
         {/* Test Scores Section */}
-        <TestScoreCard testScores={currentChild.testScores} />
+        <TestScoreCard 
+          testScores={currentChild.testScores} 
+          studentId={currentChild.id}
+          loading={loadingTestScores}
+        />
       </main>
     </div>
   );

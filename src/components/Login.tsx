@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Phone, ArrowRight, CheckCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle } from 'lucide-react';
+import { sendOtp, verifyOtp } from '../util/server';
+import userManager from '../util/user';
+import toast, { Toaster } from 'react-hot-toast';
 
 interface LoginProps {
-  onLogin: (phoneNumber: string) => void;
+  onLogin: (phoneNumber: string, token?: string, studentData?: any) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -10,29 +13,56 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp' | 'verified'>('phone');
   const [isLoading, setIsLoading] = useState(false);
+  // Remove error state, use toast instead
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneNumber.length !== 10) return;
-    
+    if (phoneNumber.length !== 10) {
+      toast.error('Please enter a valid 10 digit mobile number');
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const res = await sendOtp(phoneNumber);
+      if (res.success) {
+        toast.success(res.message || 'OTP sent successfully');
+        setStep('otp');
+      } else {
+        toast.error(res.message || 'Failed to send OTP');
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to send OTP');
+    } finally {
       setIsLoading(false);
-      setStep('otp');
-    }, 1500);
+    }
   };
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length !== 6) return;
-    
+    if (otp.length !== 6) {
+      toast.error('Please enter a valid 6 digit OTP');
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setStep('verified');
-      setTimeout(() => onLogin(phoneNumber), 1000);
-    }, 1500);
+    try {
+      const res = await verifyOtp(phoneNumber, otp);
+      if (res.token && res.data?.[0]) {
+        userManager.saveUserSession(phoneNumber, res.token, res.data[0]);
+        toast.success(res.message || 'OTP verified successfully');
+        setStep('verified');
+        setTimeout(() => {
+          onLogin(phoneNumber, res.token, res.data[0]);
+        }, 1000);
+      } else {
+        toast.error(res.message || 'Invalid OTP');
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Invalid OTP');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatPhoneNumber = (value: string) => {
@@ -59,10 +89,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Phone className="w-8 h-8 text-white" />
-          </div>
+        <div className="text-center mb-8 flex flex-col justify-center items-center gap-1">
+          <img src="src/images/logo.png" alt="Logo" className="aspect-square w-20 h-20" />
           <h1 className="text-2xl font-bold text-gray-900">Parent Portal</h1>
           <p className="text-gray-600 mt-2">Access your child's academic progress</p>
         </div>
@@ -84,12 +112,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(formatPhoneNumber(e.target.value))}
                     placeholder="Enter 10 digit mobile number"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent text-lg"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-lg"
                     maxLength={10}
                     required
                   />
                 </div>
               </div>
+              {/* Error messages now handled by toast */}
               <button
                 type="submit"
                 disabled={phoneNumber.length !== 10 || isLoading}
@@ -120,11 +149,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="Enter 6 digit OTP"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent text-lg text-center tracking-widest"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-transparent text-lg text-center tracking-widest"
                   maxLength={6}
                   required
                 />
               </div>
+              {/* Error messages now handled by toast */}
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -152,6 +182,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           )}
         </div>
       </div>
+      <Toaster />
     </div>
   );
 };
