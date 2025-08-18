@@ -69,8 +69,6 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
   // Get real user data from user manager
   const studentData = getStudentData();
   const parentData = getParentData();
-  console.log("Student's data: ", studentData);
-
   // Fetch test scores and attendance when component mounts
   useEffect(() => {
     const fetchData = async () => {
