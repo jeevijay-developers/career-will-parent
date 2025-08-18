@@ -6,6 +6,7 @@ import ConfirmationDialog from './ConfirmationDialog';
 import { getStudentData, getParentData, clearUserSession, transformTestScores, TestScore, ApiTestScore } from '../util/user';
 import { getTestScores, getAttendanceByRollNumber } from '../util/server';
 import toast from 'react-hot-toast';
+import FeeSection from './FeeSection';
 
 // API response attendance record interface
 interface AttendanceRecord {
@@ -47,7 +48,7 @@ interface Child {
     obtainedMarks: number;
     percentage: number;
     testDate: string;
-   testType: string;
+    testType: string;
   }[];
 }
 
@@ -86,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
         } finally {
           setLoadingTestScores(false);
         }
-        
+
         // Fetch attendance data
         setLoadingAttendance(true);
         try {
@@ -142,7 +143,7 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
       attendance: attendanceData ? {
         present: attendanceData.data.filter((record: AttendanceRecord) => record.presentStatus === 'P').length,
         total: attendanceData.data.length,
-        percentage: attendanceData.data.length > 0 
+        percentage: attendanceData.data.length > 0
           ? Math.round((attendanceData.data.filter((record: AttendanceRecord) => record.presentStatus === 'P').length / attendanceData.data.length) * 100 * 10) / 10
           : 0
       } : {
@@ -198,7 +199,7 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
               </div>
               <ChevronDown className={`w-5 h-5 text-gray-600 transition-transform ${showChildDropdown ? 'rotate-180' : ''}`} />
             </button>
-            
+
             {showChildDropdown && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
                 {children.map((child, index) => (
@@ -208,9 +209,8 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
                       setSelectedChild(index);
                       setShowChildDropdown(false);
                     }}
-                    className={`w-full p-3 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
-                      index === selectedChild ? 'bg-gray-50' : ''
-                    }`}
+                    className={`w-full p-3 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${index === selectedChild ? 'bg-gray-50' : ''
+                      }`}
                   >
                     <div className="font-medium text-gray-900">{child.name}</div>
                     <div className="text-sm text-gray-600">
@@ -229,15 +229,15 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
         {/* Child Info Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3 mb-3">
-            <img 
-              src={studentData.image?.url || '/user/user.jpg'} 
-              alt={`${currentChild.name}'s profile`} 
+            <img
+              src={studentData.image?.url || '/user/user.jpg'}
+              alt={`${currentChild.name}'s profile`}
               className="w-12 h-12 rounded-full"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.onerror = null;
                 target.src = '/user/user.jpg';
-              }} 
+              }}
             />
             <div>
               <h2 className="text-xl font-semibold text-gray-900">{currentChild.name}</h2>
@@ -246,7 +246,7 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
               </p>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4 mt-4">
             <div className="text-center p-3 bg-gray-50 rounded-lg">
               <Calendar className="w-5 h-5 text-gray-600 mx-auto mb-1" />
@@ -266,18 +266,21 @@ const Dashboard: React.FC<DashboardProps> = ({ phoneNumber, onLogout }) => {
         </div>
 
         {/* Attendance Section */}
-        <AttendanceCard 
-          attendanceData={attendanceData} 
+        <AttendanceCard
+          attendanceData={attendanceData}
           loading={loadingAttendance}
           rollNumber={currentChild.rollNumber}
         />
 
         {/* Test Scores Section */}
-        <TestScoreCard 
-          testScores={currentChild.testScores} 
+        <TestScoreCard
+          testScores={currentChild.testScores}
           studentId={currentChild.id}
           loading={loadingTestScores}
         />
+
+        {/* Fees Section */}
+        <FeeSection />
       </main>
 
       {/* Logout Confirmation Dialog */}

@@ -53,3 +53,48 @@ export const getAttendanceByRollNumber = async (rollNumber: string) => {
     throw error;
   }
 };
+
+// Fees types
+export interface FeeSubmission {
+  dateOfReceipt: string;
+  amount: number;
+  mode: string;
+  receiptNumber: string;
+  UTR?: string;
+  _id?: string;
+}
+
+export interface FeeRecord {
+  _id: string;
+  studentRollNo: string;
+  totalFees?: number;
+  discount?: number;
+  finalFees: number;
+  approvedBy?: string;
+  paidAmount: number;
+  pendingAmount: number;
+  status: "PAID" | "PARTIAL" | "PENDING" | string;
+  dueDate?: string;
+  submissions: FeeSubmission[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface FeesByRollNumberResponse {
+  fees: FeeRecord[];
+  studentName: string;
+}
+
+export const getFeesByRollNumber = async (
+  rollNumber: string
+): Promise<FeesByRollNumberResponse> => {
+  try {
+    const response = await apiClient.get(
+      `/api/fee/get-fee-by-roll-number/${rollNumber}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching fees by roll number:", error);
+    throw error;
+  }
+};
