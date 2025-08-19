@@ -329,7 +329,6 @@ const getMaxMarksForSubject = (subjectName: string): number => {
     'physics': 180,
     'chemistry': 180,
     'biology': 360,
-    'mathematics': 100,
     'english': 100,
     'hindi': 100,
     'social studies': 100,

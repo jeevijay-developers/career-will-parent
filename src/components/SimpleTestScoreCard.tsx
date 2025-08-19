@@ -45,7 +45,6 @@ const SimpleTestScoreCard: React.FC<SimpleTestScoreCardProps> = ({ testScores, l
       'physics': 180,
       'chemistry': 180,
       'biology': 360,
-      'mathematics': 100
     };
     return subjectMaxMarks[subjectName.toLowerCase()] || 100;
   };
